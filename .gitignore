@@ -1,0 +1,5 @@
+/server/nbproject/
+
+/server/versions/*
+!/server/versions/placeholder
+
