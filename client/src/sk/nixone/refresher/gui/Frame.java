@@ -4,6 +4,8 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -21,12 +23,19 @@ import sk.nixone.refresher.VersionUpdater;
 import sk.nixone.refresher.basic.BasicServerConnection;
 
 public class Frame extends JFrame {
-	static public void main(String [] arguments)
+	static public void main(String [] arguments) throws Exception
 	{
-		ServerConnection connection = new BasicServerConnection("http://criticalimpact.nixone.sk/refresher.php");
-		VersionUpdater updater = new VersionUpdater(connection, new File(".version"), new File("test"));
+		Properties properties = new Properties();
+		properties.load(new FileInputStream(new File("refresher.ini")));
 		
-		Frame frame = new Frame();
+		ServerConnection connection = new BasicServerConnection(properties.getProperty("server.uri"));
+		VersionUpdater updater = new VersionUpdater(
+				connection, 
+				new File(properties.getProperty("local.versionFile", ".version")), 
+				new File(properties.getProperty("local.applicationDirectory", "application"))
+		);
+
+		Frame frame = new Frame(properties);
 		frame.run(updater);
 	}
 	
@@ -35,13 +44,23 @@ public class Frame extends JFrame {
 	private JLabel statusLabel;
 	private JProgressBar progressBar;
 	
+	private String messageUpdatedToVersion;
+	private String messageUpdatingToVersion;
+	private String messageInitializingUpdater;
+	private String messageDone;
+	private String runButtonText;
+	private String updateButtonText;
+	private String messageThereIsNewerVersion;
+	private String messageFetchingUpdateInfo;
+	private String messageEverythingUpToDate;
+	
 	private ProgressUpdateListener progressListener = new ProgressUpdateListener() {
 		@Override
 		public void onVersionStarted(final VersionMetadata version) {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					statusLabel.setText("Updating to "+version+"...");
+					statusLabel.setText(String.format(messageUpdatingToVersion, version.toString()));
 				}
 			});
 		}
@@ -51,8 +70,8 @@ public class Frame extends JFrame {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					statusLabel.setText("Updated to "+version+".");
-					progressBar.setString("Done.");
+					statusLabel.setText(String.format(messageUpdatedToVersion, version.toString()));
+					progressBar.setString(messageDone);
 					runButton.setEnabled(true);
 				}
 			});
@@ -102,9 +121,19 @@ public class Frame extends JFrame {
 		}
 	};
 	
-	public Frame()
+	public Frame(Properties properties)
 	{
-		super("Updater");
+		super(properties.getProperty("gui.title", "Updater"));
+		
+		this.messageInitializingUpdater = properties.getProperty("gui.messageInitializingUpdater", "Initializing updater...");
+		this.messageDone = properties.getProperty("gui.messageDone", "Done.");
+		this.messageUpdatedToVersion = properties.getProperty("gui.messageUpdatedToVersion", "Updated to version %s.");
+		this.messageUpdatingToVersion = properties.getProperty("gui.messageUpdatingToVersion", "Updating to version %s...");
+		this.runButtonText = properties.getProperty("gui.runButtonText", "Run");
+		this.updateButtonText = properties.getProperty("gui.updateButtonText", "Update");
+		this.messageFetchingUpdateInfo =  properties.getProperty("gui.messageFetchingUpdateInfo", "Fetching update information...");
+		this.messageThereIsNewerVersion = properties.getProperty("gui.messageThereIsNewerVersion", "There is newer version %s.");
+		this.messageEverythingUpToDate = properties.getProperty("gui.messageEverythingUpToDate", "Everything is up to date.");
 		
 		setSize(400, 150);
 		
@@ -117,13 +146,13 @@ public class Frame extends JFrame {
 	
 	private void createComponents()
 	{		
-		updateButton = new JButton("Update");
+		updateButton = new JButton(updateButtonText);
 		Font font = updateButton.getFont();
 		font = font.deriveFont(15f);
 		updateButton.setFont(font);
 		updateButton.setEnabled(false);
 		
-		runButton = new JButton("Run");
+		runButton = new JButton(runButtonText);
 		runButton.setFont(font);
 		
 		statusLabel = new JLabel(" ");
@@ -131,7 +160,7 @@ public class Frame extends JFrame {
 		
 		progressBar = new JProgressBar();
 		progressBar.setFont(font);
-		progressBar.setString("Initializing updater...");
+		progressBar.setString(messageInitializingUpdater);
 		progressBar.setIndeterminate(true);
 		progressBar.setStringPainted(true);
 	}
@@ -171,7 +200,7 @@ public class Frame extends JFrame {
 	{
 		try {
 			progressBar.setIndeterminate(true);
-			progressBar.setString("Fetching update information...");
+			progressBar.setString(messageFetchingUpdateInfo);
 			
 			if(updater.hasNewerVersion())
 			{
@@ -180,13 +209,13 @@ public class Frame extends JFrame {
 				
 				updateButton.setEnabled(true);
 				
-				statusLabel.setText("There is a new version "+updater.getNewerVersion());
+				statusLabel.setText(String.format(messageThereIsNewerVersion, updater.getNewerVersion().toString()));
 			}
 			else
 			{
 				progressBar.setString(" ");
 				progressBar.setIndeterminate(false);
-				statusLabel.setText("Everything is up to date.");
+				statusLabel.setText(messageEverythingUpToDate);
 			}
 			
 			updateButton.addActionListener(new ActionListener() {
