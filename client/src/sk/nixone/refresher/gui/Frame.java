@@ -3,9 +3,11 @@ package sk.nixone.refresher.gui;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -15,46 +17,16 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout.Alignment;
 
+import sk.nixone.refresher.FileExecFlagAwarder;
 import sk.nixone.refresher.FileMetadata;
 import sk.nixone.refresher.ProgressUpdateListener;
-import sk.nixone.refresher.ServerConnection;
+import sk.nixone.refresher.Utils;
 import sk.nixone.refresher.VersionMetadata;
 import sk.nixone.refresher.VersionUpdater;
 import sk.nixone.refresher.basic.BasicServerConnection;
 
 public class Frame extends JFrame {
-	static public void main(String [] arguments) throws Exception
-	{
-		Properties properties = new Properties();
-		properties.load(new FileInputStream(new File("refresher.ini")));
-		
-		ServerConnection connection = new BasicServerConnection(properties.getProperty("server.uri"));
-		VersionUpdater updater = new VersionUpdater(
-				connection, 
-				new File(properties.getProperty("local.versionFile", ".version")), 
-				new File(properties.getProperty("local.applicationDirectory", "application"))
-		);
-
-		Frame frame = new Frame(properties);
-		frame.run(updater);
-	}
-	
-	private JButton updateButton;
-	private JButton runButton;
-	private JLabel statusLabel;
-	private JProgressBar progressBar;
-	
-	private String messageUpdatedToVersion;
-	private String messageUpdatingToVersion;
-	private String messageInitializingUpdater;
-	private String messageDone;
-	private String runButtonText;
-	private String updateButtonText;
-	private String messageThereIsNewerVersion;
-	private String messageFetchingUpdateInfo;
-	private String messageEverythingUpToDate;
-	
-	private ProgressUpdateListener progressListener = new ProgressUpdateListener() {
+	private class UpdateListener implements ProgressUpdateListener {
 		@Override
 		public void onVersionStarted(final VersionMetadata version) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -119,12 +91,65 @@ public class Frame extends JFrame {
 		public void onFileDownload(FileMetadata file, int sizeDownloaded) {
 			// nothing
 		}
-	};
+	}
+	private class RunFunctionality implements Runnable {
+
+		@Override
+		public void run() {
+			Thread t = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						FileExecFlagAwarder awarder = new FileExecFlagAwarder();
+						awarder.award(filesToBeExecutable);
+						
+						Process process = Runtime.getRuntime().exec(commandToRun);
+						
+						Scanner scanner = new Scanner(process.getErrorStream());
+						while(scanner.hasNextLine()) {
+							System.out.println(scanner.nextLine());
+						}
+					} catch(IOException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			t.setDaemon(true);
+			t.start();
+			
+			Frame.this.setVisible(false);
+			Frame.this.dispose();
+		}
+	}
+	
+	private JButton updateButton;
+	private JButton runButton;
+	private JLabel statusLabel;
+	private JProgressBar progressBar;
+	
+	private ProgressUpdateListener progressListener = new UpdateListener();
+	private Runnable runListener = new RunFunctionality();
+	
+	private String messageUpdatedToVersion;
+	private String messageUpdatingToVersion;
+	private String messageInitializingUpdater;
+	private String messageDone;
+	private String runButtonText;
+	private String updateButtonText;
+	private String messageThereIsNewerVersion;
+	private String messageFetchingUpdateInfo;
+	private String messageEverythingUpToDate;
+	
+	private String commandToRun;
+	private List<String> filesToBeExecutable;
 	
 	public Frame(Properties properties)
 	{
 		super(properties.getProperty("gui.title", "Updater"));
 		
+		this.filesToBeExecutable = Utils.readMultipleProperties(properties, "local.filesToBeExecutable");
+		
+		this.commandToRun = properties.getProperty("local.commandToRun."+Application.getOSName());
 		this.messageInitializingUpdater = properties.getProperty("gui.messageInitializingUpdater", "Initializing updater...");
 		this.messageDone = properties.getProperty("gui.messageDone", "Done.");
 		this.messageUpdatedToVersion = properties.getProperty("gui.messageUpdatedToVersion", "Updated to version %s.");
@@ -154,6 +179,7 @@ public class Frame extends JFrame {
 		
 		runButton = new JButton(runButtonText);
 		runButton.setFont(font);
+		runButton.setEnabled(true);
 		
 		statusLabel = new JLabel(" ");
 		statusLabel.setFont(font);
@@ -163,6 +189,13 @@ public class Frame extends JFrame {
 		progressBar.setString(messageInitializingUpdater);
 		progressBar.setIndeterminate(true);
 		progressBar.setStringPainted(true);
+		
+		runButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				runListener.run();
+			}
+		});
 	}
 	
 	private void createLayout()
@@ -201,6 +234,11 @@ public class Frame extends JFrame {
 		try {
 			progressBar.setIndeterminate(true);
 			progressBar.setString(messageFetchingUpdateInfo);
+			
+			if(!updater.hasCurrentVersion())
+			{
+				runButton.setEnabled(false);
+			}
 			
 			if(updater.hasNewerVersion())
 			{

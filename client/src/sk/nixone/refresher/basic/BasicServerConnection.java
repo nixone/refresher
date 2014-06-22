@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import sk.nixone.refresher.ServerConnection;
+import sk.nixone.refresher.Utils;
 import sk.nixone.refresher.VersionMetadata;
 
 public class BasicServerConnection implements ServerConnection
@@ -43,9 +44,11 @@ public class BasicServerConnection implements ServerConnection
 	protected JSONObject queryOperationAsJSON(String operationString) throws ServerConnection.Exception
 	{
 		try {
-			URLConnection connection = (new URL(queryUri+operationString)).openConnection();
+			String uriString = queryUri+operationString;
 			
-			return new JSONObject(StreamUtils.read(connection.getInputStream()));
+			URLConnection connection = (new URL(uriString)).openConnection();
+			
+			return new JSONObject(Utils.read(connection.getInputStream()));
 		} catch (IOException e) {
 			throw new ServerConnection.Exception(e);
 		}

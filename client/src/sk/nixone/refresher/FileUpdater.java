@@ -44,7 +44,7 @@ public class FileUpdater {
 		
 		try {		
 			File target = new File(rootDirectory, file.getRelativePath());
-			String md5 = HashUtils.md5FromFile(target);
+			String md5 = Utils.md5FromFile(target);
 			
 			if(!md5.equals(file.getMD5())) {
 				File temp = File.createTempFile("refresherdownload", ".download");

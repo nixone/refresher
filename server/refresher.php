@@ -116,7 +116,14 @@ function operation_version_subdir($urlDirectory, $rootDirectory, $currentDirecto
 
 $versionDirectory = dirname(__FILE__)."/versions";
 $onlyFile = substr(__FILE__, strlen(dirname(__FILE__))+1);
-$onlyDirectoryUri = substr($_SERVER['SCRIPT_URI'], 0, -strlen($onlyFile));
+
+$scriptUri = $_SERVER['SCRIPT_URI'];
+
+if(!$scriptUri) {
+	$scriptUri = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}";
+}
+
+$onlyDirectoryUri = substr($scriptUri, 0, -strlen($onlyFile));
 $versionUri = $onlyDirectoryUri."/versions";
 
 switch($_GET['operation']) {
