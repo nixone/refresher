@@ -44,9 +44,12 @@ public class Utils {
 			e.printStackTrace();
 		}
 		
+		byte[] buffer = new byte[8192];
+		
 		try (InputStream is = new FileInputStream(file)) {
 		  DigestInputStream dis = new DigestInputStream(is, md);
-		  while(dis.read() != -1);
+		  
+		  while(dis.read(buffer) != -1);
 		}
 		byte[] digest = md.digest();
 	    StringBuffer sb = new StringBuffer("");
