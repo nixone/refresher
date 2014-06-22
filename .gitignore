@@ -3,3 +3,7 @@
 /server/versions/*
 !/server/versions/placeholder
 
+/client/bin/
+
+/client/.classpath
+/client/.project
