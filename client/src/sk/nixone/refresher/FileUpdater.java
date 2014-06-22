@@ -51,14 +51,15 @@ public class FileUpdater {
 				OutputStream output = new FileOutputStream(temp);
 				InputStream input = file.getInputStream();
 				
-				int data;
+				byte[] data = new byte[1024];
+				int byteCount;
 				
-				while((data = input.read()) != -1)
+				while((byteCount = input.read(data)) != -1)
 				{
-					++versionBytes;
-					++fileBytes;
+					versionBytes += byteCount;
+					fileBytes += byteCount;
 					
-					output.write(data);
+					output.write(data, 0, byteCount);
 
 					listener.onFileDownload(file, fileBytes);
 					listener.onVersionDownload(version, versionBytes);

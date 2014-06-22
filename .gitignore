@@ -7,3 +7,6 @@
 
 /client/.classpath
 /client/.project
+
+/client/.version
+/client/test/
