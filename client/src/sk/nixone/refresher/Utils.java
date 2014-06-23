@@ -14,6 +14,22 @@ import java.util.List;
 import java.util.Properties;
 
 public class Utils {
+	static public String toNBytesString(int bytes, int round)
+	{
+		String [] units = new String[]{"b", "kiB", "MiB", "GiB"};
+		
+		int currentUnit = 0;
+		float currentSize = bytes;
+		
+		while(currentUnit < units.length-1 && currentSize > 1024f)
+		{
+			++currentUnit;
+			currentSize /= 1024f;
+		}
+		
+		return String.format("%."+round+"f %s", currentSize, units[currentUnit]);
+	}
+	
 	static public String read(InputStream stream) throws IOException
 	{
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));

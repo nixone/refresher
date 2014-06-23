@@ -44,6 +44,7 @@ public class Frame extends JFrame {
 				public void run() {
 					statusLabel.setText(String.format(messageUpdatedToVersion, version.toString()));
 					progressBar.setString(messageDone);
+					progressLabel.setText("");
 					runButton.setEnabled(true);
 				}
 			});
@@ -57,12 +58,18 @@ public class Frame extends JFrame {
 					progressBar.setMinimum(0);
 					try {
 						progressBar.setMaximum(version.getTotalSize());
+						
+						progressBar.setValue(sizeDownloaded);
+						
+						progressLabel.setText(
+								Utils.toNBytesString(sizeDownloaded, 1)+
+								" / "+
+								Utils.toNBytesString(version.getTotalSize(), 1)
+						);
 					} catch(Exception e)
 					{
 						e.printStackTrace();
 					}
-					
-					progressBar.setValue(sizeDownloaded);
 				}
 			});
 		}
@@ -126,6 +133,7 @@ public class Frame extends JFrame {
 	private JButton runButton;
 	private JLabel statusLabel;
 	private JProgressBar progressBar;
+	private JLabel progressLabel;
 	
 	private ProgressUpdateListener progressListener = new UpdateListener();
 	private Runnable runListener = new RunFunctionality();
@@ -196,6 +204,8 @@ public class Frame extends JFrame {
 				runListener.run();
 			}
 		});
+		
+		progressLabel = new JLabel("");
 	}
 	
 	private void createLayout()
@@ -210,6 +220,7 @@ public class Frame extends JFrame {
 			layout.createParallelGroup(Alignment.CENTER)
 				.addComponent(statusLabel)
 				.addComponent(progressBar)
+				.addComponent(progressLabel)
 				.addGroup(
 					layout.createSequentialGroup()
 					.addComponent(runButton)
@@ -221,6 +232,7 @@ public class Frame extends JFrame {
 				layout.createSequentialGroup()
 					.addComponent(statusLabel)
 					.addComponent(progressBar)
+					.addComponent(progressLabel)
 					.addGroup(
 						layout.createParallelGroup(Alignment.CENTER)
 						.addComponent(runButton)
@@ -243,7 +255,7 @@ public class Frame extends JFrame {
 			if(updater.hasNewerVersion())
 			{
 				progressBar.setIndeterminate(false);
-				progressBar.setString(" ");
+				progressBar.setString("You may update now...");
 				
 				updateButton.setEnabled(true);
 				
