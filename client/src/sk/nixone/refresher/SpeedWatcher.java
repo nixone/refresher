@@ -31,17 +31,12 @@ public class SpeedWatcher
 			history.removeFirst();
 		}
 		
-		long totalBytes = 0;
-		for(HistoryRecord record : history)
-		{
-			totalBytes += record.bytes;
-		}
-		
+		long totalBytes = history.getLast().bytes - history.getFirst().bytes;		
 		long historyDuration = history.getLast().timestamp - history.getFirst().timestamp;
 		
 		if(historyDuration > 0)
 		{
-			currentSpeed = (float)totalBytes/(float)historyDuration;
+			currentSpeed = (float)totalBytes/(float)(historyDuration/1000f);
 		}
 	}
 	
