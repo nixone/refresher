@@ -21,6 +21,7 @@ import javax.swing.GroupLayout.Alignment;
 import sk.nixone.refresher.FileExecFlagAwarder;
 import sk.nixone.refresher.FileMetadata;
 import sk.nixone.refresher.ProgressUpdateListener;
+import sk.nixone.refresher.SpeedWatcher;
 import sk.nixone.refresher.Utils;
 import sk.nixone.refresher.VersionMetadata;
 import sk.nixone.refresher.VersionUpdater;
@@ -66,8 +67,13 @@ public class Frame extends JFrame {
 						progressLabel.setText(
 								Utils.toNBytesString(sizeDownloaded, 1)+
 								" / "+
-								Utils.toNBytesString(version.getTotalSize(), 1)
+								Utils.toNBytesString(version.getTotalSize(), 1)+
+								" ("+
+								Utils.toNBytesString((int)speedWatcher.getCurrentSpeed(), 1)+
+								"/s )"
 						);
+						
+						speedWatcher.onDownload(sizeDownloaded);
 					} catch(Exception e)
 					{
 						e.printStackTrace();
@@ -139,6 +145,7 @@ public class Frame extends JFrame {
 	
 	private ProgressUpdateListener progressListener = new UpdateListener();
 	private Runnable runListener = new RunFunctionality();
+	private SpeedWatcher speedWatcher = new SpeedWatcher();
 	
 	private String messageUpdatedToVersion;
 	private String messageUpdatingToVersion;
