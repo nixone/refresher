@@ -184,6 +184,7 @@ public class Frame extends JFrame {
 		createComponents();
 		createLayout();
 		
+		setLocationRelativeTo(null);
 		setResizable(false);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setVisible(true);

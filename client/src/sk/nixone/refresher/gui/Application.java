@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
+import javax.swing.UIManager;
+
 import sk.nixone.refresher.ServerConnection;
 import sk.nixone.refresher.VersionUpdater;
 import sk.nixone.refresher.basic.BasicServerConnection;
@@ -21,6 +23,8 @@ public class Application {
 				new File(properties.getProperty("local.applicationDirectory", "application"))
 		);
 
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		
 		Frame frame = new Frame(properties);
 		frame.run(updater);
 	}
