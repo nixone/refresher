@@ -16,7 +16,7 @@ import java.util.Properties;
 public class Utils {
 	static public String toNBytesString(int bytes, int round)
 	{
-		String [] units = new String[]{"b", "kiB", "MiB", "GiB"};
+		String [] units = new String[]{"B", "KiB", "MiB", "GiB"};
 		
 		int currentUnit = 0;
 		float currentSize = bytes;

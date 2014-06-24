@@ -1,5 +1,6 @@
 package sk.nixone.refresher.gui;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,6 +34,7 @@ public class Frame extends JFrame {
 				@Override
 				public void run() {
 					statusLabel.setText(String.format(messageUpdatingToVersion, version.toString()));
+					progressLabel.setText(" ");
 				}
 			});
 		}
@@ -44,7 +46,7 @@ public class Frame extends JFrame {
 				public void run() {
 					statusLabel.setText(String.format(messageUpdatedToVersion, version.toString()));
 					progressBar.setString(messageDone);
-					progressLabel.setText("");
+					progressLabel.setText(" ");
 					runButton.setEnabled(true);
 				}
 			});
@@ -147,6 +149,8 @@ public class Frame extends JFrame {
 	private String messageThereIsNewerVersion;
 	private String messageFetchingUpdateInfo;
 	private String messageEverythingUpToDate;
+	private String messageYouMayUpdateNow;
+	private String messageYouMayRunNow;
 	
 	private String commandToRun;
 	private List<String> filesToBeExecutable;
@@ -167,12 +171,13 @@ public class Frame extends JFrame {
 		this.messageFetchingUpdateInfo =  properties.getProperty("gui.messageFetchingUpdateInfo", "Fetching update information...");
 		this.messageThereIsNewerVersion = properties.getProperty("gui.messageThereIsNewerVersion", "There is newer version %s.");
 		this.messageEverythingUpToDate = properties.getProperty("gui.messageEverythingUpToDate", "Everything is up to date.");
-		
-		setSize(400, 150);
+		this.messageYouMayUpdateNow = properties.getProperty("gui.messageYouMayUpdateNow", "You may update now...");
+		this.messageYouMayRunNow = properties.getProperty("gui.messageYouMayRunNow", "You may run now...");
 		
 		createComponents();
 		createLayout();
 		
+		setResizable(false);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setVisible(true);
 	}
@@ -197,6 +202,7 @@ public class Frame extends JFrame {
 		progressBar.setString(messageInitializingUpdater);
 		progressBar.setIndeterminate(true);
 		progressBar.setStringPainted(true);
+		progressBar.setPreferredSize(new Dimension(300, 30));
 		
 		runButton.addActionListener(new ActionListener() {
 			@Override
@@ -205,7 +211,7 @@ public class Frame extends JFrame {
 			}
 		});
 		
-		progressLabel = new JLabel("");
+		progressLabel = new JLabel(" ");
 	}
 	
 	private void createLayout()
@@ -239,6 +245,8 @@ public class Frame extends JFrame {
 						.addComponent(updateButton)
 					)
 			);
+		
+		pack();
 	}
 	
 	public void run(final VersionUpdater updater)
@@ -255,7 +263,7 @@ public class Frame extends JFrame {
 			if(updater.hasNewerVersion())
 			{
 				progressBar.setIndeterminate(false);
-				progressBar.setString("You may update now...");
+				progressBar.setString(messageYouMayUpdateNow);
 				
 				updateButton.setEnabled(true);
 				
@@ -263,7 +271,7 @@ public class Frame extends JFrame {
 			}
 			else
 			{
-				progressBar.setString(" ");
+				progressBar.setString(messageYouMayRunNow);
 				progressBar.setIndeterminate(false);
 				statusLabel.setText(messageEverythingUpToDate);
 			}

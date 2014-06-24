@@ -51,7 +51,7 @@ public class FileUpdater {
 				OutputStream output = new FileOutputStream(temp);
 				InputStream input = file.getInputStream();
 				
-				byte[] data = new byte[1024];
+				byte[] data = new byte[8192];
 				int byteCount;
 				
 				while((byteCount = input.read(data)) != -1)
